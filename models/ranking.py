@@ -7,17 +7,19 @@ import json
 
 class Ranking:
     def __init__(self):
-        path_to_closings: str = "Desktop/marking hack/Output.csv"
-
-        self.products = pd.read_csv(path_to_closings)
-
         # TODO: вынести в конфиг
+        path_to_closings: str = "data/Output_short.parquet"  # "data/Output.parquet"
+        path_to_products: str = "data/Products.csv"
+
         self.gtin_column = ["gtin"]
         self.sale_fields = ['Продажа конечному потребителю в точке продаж',
                             'Дистанционная продажа конечному потребителю',
                             'Конечная продажа организации', 'Продажи за пределы РФ',
                             'Продажа по государственному контракту']
         self.fields_mapping = {"prid": 0, "variety": 1, "counts": 2, "prices": 3}
+
+        self.closings = pd.read_parquet(path_to_closings, engine="fastparquet")
+        self.products = pd.read_csv(path_to_products)
 
     def extract_prices(self, x):
         # Цены на gtin у каждого производителя
@@ -31,8 +33,8 @@ class Ranking:
         product_ids = self.products[self.products['product_short_name'] == product_type]['gtin']
 
         # Проданные товары определенной категории
-        sales = self.products[
-            self.products['gtin'].isin(product_ids) & self.products['type_operation'].isin(self.sale_fields)]
+        sales = self.closings[
+            self.closings['gtin'].isin(product_ids) & self.closings['type_operation'].isin(self.sale_fields)]
 
         # Поставщики
         prids = list(sales.groupby("prid").groups.keys())
@@ -81,4 +83,25 @@ class Ranking:
                 if score > 1:
                     ranked_list[index], ranked_list[index + 1] = ranked_list[index + 1], ranked_list[index]
 
-        return json.dumps([{"prid": item[0], "variety": item[1], "volume": item[2]} for item in ranked_list])
+
+        # Временно
+        df = pd.DataFrame()
+
+        a1 = []
+        a2 = []
+        a3 = []
+        a4 = []
+
+        for i in reversed(ranked_list):
+            a1.append(i[0])
+            a2.append(i[1])
+            a3.append(i[2])
+            a4.append(i[3])
+
+        df['Prid'] = a1
+        df['Variety'] = a2
+        df['Volume'] = a3
+        df['Prices'] = a4
+
+        return df
+        # return json.dumps([{"prid": item[0], "variety": item[1], "volume": item[2]} for item in ranked_list])

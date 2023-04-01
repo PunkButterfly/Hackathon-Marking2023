@@ -4,12 +4,13 @@ import numpy as np
 import matplotlib.pyplot as plt
 import requests
 import plotly.express as px
-
+from models.ranking import Ranking
 
 
 def plot_graph(df, x_axis, y_axis):
     fig = px.line(df, x=data['dt'], y=data['cnt'], title="График")
     return fig
+
 
 def get_data_from_api(gtin, reg_id):
     url = "http://127.0.0.1:5000/get_data"
@@ -21,9 +22,10 @@ def get_data_from_api(gtin, reg_id):
     else:
         st.warning("Error fetching data from API")
         return None
-    
+
+
 def get_gtins():
-    url = "http://127.0.0.1:5000/get_gtins"    
+    url = "http://127.0.0.1:5000/get_gtins"
     response = requests.post(url)
 
     if response.status_code == 200:
@@ -32,10 +34,11 @@ def get_gtins():
         st.warning("Error fetching data from API")
         return None
 
+
 def get_reg_ids():
     url = "http://127.0.0.1:5000/get_reg_ids"
     response = requests.post(url)
-    
+
     if response.status_code == 200:
         reg_ids = list(response.json())
         return reg_ids
@@ -44,11 +47,10 @@ def get_reg_ids():
         return None
 
 
-
 st.set_page_config(page_title="MARKING HACK", layout="wide")
 
-with open("style.css")as f:
-    st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html = True)
+with open("style.css") as f:
+    st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
 
 st.title("Название")
 
@@ -57,27 +59,32 @@ navbar_container = st.container()
 with navbar_container:
     col1, col2, col3 = st.columns(3)
 
-    graph_tab, tab2, tab3 = st.tabs(["Предикты", "Tab 2", "Tab 3"])
+    analytics_tab, ranking_tab, tab3 = st.tabs(["Аналитика", "Ранжирование", "Tab 3"])
 
+with analytics_tab:
+    reg_ids = st.selectbox("Регион:", get_reg_ids())
+    gtins = st.text_input("Товар:", "00C22971781D72C7C475869EC049959A")
+    # gtins = st.selectbox("Товар:", "get_gtins()")
 
-with graph_tab:
-    st.sidebar.title("Параметры")
-
-    x_axis = st.sidebar.selectbox("Регион:", get_reg_ids())
-    y_axis = st.sidebar.selectbox("Товар:", get_gtins())
-
-    data = get_data_from_api(y_axis, int(x_axis))
+    data = get_data_from_api(gtins, int(reg_ids))
     data = data.sort_values('dt')
-    print(type(data))
+
     if data is not None:
         if len(data) == 0:
             st.warning('Недостаточно данных')
         else:
             st.dataframe(data)
-            graph = plot_graph(data, x_axis, y_axis)
+            graph = plot_graph(data, reg_ids, gtins)
             st.plotly_chart(graph)
-with tab2:
-    st.header("Tab 2 Content")
 
+with ranking_tab:
+    ranker = Ranking()
+    product_type = st.text_input("Вид товара", value="9199AB529CF62D4BDB7E8B1D7459001D")
+    ranked_data = ranker.ranking(product_type)
+    if ranked_data is not None:
+        if len(ranked_data) == 0:
+            st.warning('Недостаточно данных')
+        else:
+            st.dataframe(ranked_data)
 with tab3:
     st.header("Tab 3 Content")
