@@ -1,0 +1,4 @@
+button[data-baseweb="tab"] > div[data-testid="stMarkdownContainer"] > p {
+  font-size: 24px;
+  padding: 0 50px;
+}
