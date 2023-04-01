@@ -83,25 +83,25 @@ class Ranking:
                 if score > 1:
                     ranked_list[index], ranked_list[index + 1] = ranked_list[index + 1], ranked_list[index]
 
-
-        # Временно
-        df = pd.DataFrame()
-
-        a1 = []
-        a2 = []
-        a3 = []
-        a4 = []
-
-        for i in reversed(ranked_list):
-            a1.append(i[0])
-            a2.append(i[1])
-            a3.append(i[2])
-            a4.append(i[3])
-
-        df['Prid'] = a1
-        df['Variety'] = a2
-        df['Volume'] = a3
-        df['Prices'] = a4
+        df = pd.DataFrame(reversed(ranked_list), columns=['Prid', 'Variety', 'Volume', 'Prices']) # .astype({'name1': int})
+        # # Временно
+        # df = pd.DataFrame()
+        #
+        # a1 = []
+        # a2 = []
+        # a3 = []
+        # a4 = []
+        #
+        # for i in reversed(ranked_list):
+        #     a1.append(i[0])
+        #     a2.append(i[1])
+        #     a3.append(i[2])
+        #     a4.append(i[3])
+        #
+        # df['Prid'] = a1
+        # df['Variety'] = a2
+        # df['Volume'] = a3
+        # df['Prices'] = a4
 
         return df
         # return json.dumps([{"prid": item[0], "variety": item[1], "volume": item[2]} for item in ranked_list])
