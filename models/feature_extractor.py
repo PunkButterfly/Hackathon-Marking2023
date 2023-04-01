@@ -5,7 +5,7 @@ from tqdm import tqdm
 import json
 
 
-class Ranking:
+class FeatureExtractor:
     def __init__(self):
         # TODO: вынести в конфиг
         path_to_closings: str = "data/Output_short.parquet"  # "data/Output.parquet"
@@ -52,13 +52,11 @@ class Ranking:
             max_places.append([sales.iloc[group["price"].idxmax()]["inn"]])
 
         result = {"regions": list(grouped.groups.keys()),
-                  "mean_prices": grouped["price"].mean(),
-                  "min_prices": grouped["price"].min(),
+                  "mean_prices": grouped["price"].mean().to_list(),
+                  "min_prices": grouped["price"].min().to_list(),
                   "min_places": min_places,
-                  "max_prices": grouped["price"].max(),
+                  "max_prices": grouped["price"].max().to_list(),
                   "max_places": max_places}
-
-        print(pd.DataFrame(result))
 
         return result
 
