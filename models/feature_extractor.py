@@ -30,7 +30,7 @@ class FeatureExtractor:
 
         return x
 
-    def group_region_retails(self, product_gtin: str = "1248F88441BCFC563FB99D77DB0BB80D"):
+    def group_region_retails(self, product_gtin: str):
         # gtin товаров определенной категории
         # product_ids = self.products[self.products['product_short_name'] == product_type]['gtin']
 

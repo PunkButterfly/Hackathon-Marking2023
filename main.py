@@ -1,15 +1,18 @@
 import streamlit as st
+import streamlit.components.v1 as components
 import pandas as pd
 import numpy as np
 import geopandas as gpd
 import folium
 import matplotlib.pyplot as plt
 import requests
+
 from models.feature_extractor import FeatureExtractor
 from utils import plot_graph, get_data, get_gtins, get_reg_ids
 
 data = pd.read_csv("data/week_closed_gtin.csv")
-necessary_regions = pd.read_csv("data/okato.csv")["ОКАТО"].astype(int)
+okato = pd.read_csv('data/okato.csv')
+
 extractor = FeatureExtractor()
 
 st.set_page_config(page_title="MARKING HACK", layout="wide")
@@ -55,40 +58,51 @@ with ranking_tab:
     #         st.dataframe(ranked_data)
 
 with tab3:
-    retails_features = extractor.group_region_retails()
-    # загружаем данные о границах и именах регионов
-    russia_regions = gpd.read_file('data/admin_level_4.geojson')
-
-    # добавляем уникальные id'шники регионов
-    russia_regions['REGION_ID'] = necessary_regions
-
-    # создаём датафрейм со значениями в каждом регионе
-    df = pd.DataFrame()
+    product_gtin = st.text_input("GTIN товара:", "1248F88441BCFC563FB99D77DB0BB80D")
     value_type = st.selectbox("Тип значений", ["Минимальная цена", "Максимальная цена", "Средняя цена"])
 
     value_type_mapping = {"Минимальная цена": "min_prices",
                           "Максимальная цена": "max_prices",
                           "Средняя цена": "mean_prices"}
 
-    print(necessary_regions)
-    missed_regions = np.setdiff1d(necessary_regions, retails_features["regions"])
-    print(missed_regions)
-    retails_features["regions"].extend(missed_regions)
-    print(retails_features["regions"])
+    retails_features = extractor.group_region_retails(product_gtin)
 
-    df['REGION_ID'] = retails_features["regions"]
-    print(retails_features["min_prices"])
-    df['value'] = retails_features["min_prices"].extend([0 for item in missed_regions])
-    print(retails_features["min_prices"].extend([0 for item in missed_regions]))
+    russia_regions = gpd.read_file('data/regions_new.geojson')
 
-    m = folium.Map(location=[63.391522, 96.328125], zoom_start=3)  # , tiles='cartodb positro'
+    dictionary = {"REGION_ID": [], "values": []}
+
+    index = 0
+    for i in range(0, 85):
+        if i in retails_features["regions"]:
+            index = retails_features["regions"].index(i)
+
+            dictionary["REGION_ID"].append(i)
+            dictionary["values"].append(retails_features[value_type_mapping[value_type]][index])
+        else:
+            dictionary["REGION_ID"].append(i)
+            dictionary["values"].append(np.NaN)
+
+    df = pd.DataFrame(dictionary)
+
+    # читаем okato и создаём словарь
+    regions_mapping = {}
+    for i in range(len(okato)):
+        regions_mapping[okato['ISO'][i]] = okato['ОКАТО'][i]
+
+    # добавляем уникальные id'шники регионов
+    russia_regions['REGION_ID'] = dictionary["REGION_ID"]
+
+    russia_regions['REGION_ID'] = russia_regions['ref'].replace(regions_mapping)
+    russia_regions['REGION_ID'].astype('int64')
+
+    m = folium.Map(location=[63.391522, 96.328125], zoom_start=3, tiles="cartodb positron")  # , tiles='cartodb positro'
     # cartodb positro - весит 27 МБ
 
     rel_ = folium.Choropleth(
         geo_data=russia_regions,
         name='Регионы России',
         data=df,
-        columns=['REGION_ID', 'value'],
+        columns=['REGION_ID', 'values'],
         key_on='feature.properties.REGION_ID',
         bins=5,
         fill_color='BuGn',
@@ -104,3 +118,5 @@ with tab3:
     rel_.add_to(m)
 
     m.save('maps/map.html')
+
+    components.html(open("maps/map.html", 'r', encoding='utf-8').read())
