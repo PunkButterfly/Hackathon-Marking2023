@@ -9,6 +9,19 @@ import folium
 
 st.set_page_config(layout="wide")
 
+st.header("Прогнозирование спроса и поставок товаров в стране")
+st.markdown(
+    "Также мы разработали систему одновременного предсказания ввода товара в оборот и вывода товара из оборота относительно всей страны (без деления по регионам).  "
+    "Для этого так же использовались сети LSTM. "
+    "Для каждого gtin строится график с предсказаниями ввода и вывода товара на 60 дней вперед. "
+    "Для оценки снова была введена метрика. Пусть  " + "\n" +
+    r"* $\text{last predicted enty cumsum}$ -- последнее предсказанное значение количества введеного товара. "
+    r"* $\text{last predicted sold cumsum}$ -- последнее предсказанное значение количество выведенного из оборота товара  " + "\n" +
+    "Тогда мeтрика считается как:  " + "\n" +
+    r"$$\text{metric}:=\frac{\text{(last predicted enty cumsum} - \text{last predicted sold cumsum}}{\text{last predicted enty cumsum}}$$" + "\n" +
+    "Метрика показывает насколько процентов предсказанный вывод товара из оборота меньше ввода в оборот. "
+    "Чем ниже процент, тем больше в стране требуется конкретного товара (отрицательный процент означает, что вывод товара превысит поставки)")
+
 
 def plot_graph(df):
     curr_data = df[df['type'] == 'real_data'][['cnt_cumsum_entry', 'cnt_cumsum_sold', 'dt']]
@@ -19,20 +32,20 @@ def plot_graph(df):
     test['cnt_cumsum_entry'] += curr_data['cnt_cumsum_entry'][-1:].values
     test['cnt_cumsum_sold'] += curr_data['cnt_cumsum_sold'][-1:].values
 
-    fig1 = px.line(curr_data, x = 'dt', y ='cnt_cumsum_sold')
-    fig2 = px.line(predicted_data, x = 'dt', y ='cnt_cumsum_sold')
-    fig2['data'][0]['line']['color']="#ffa500"
-    fig2['data'][0]['line']['dash']="dot"
-    fig5 = px.line(test, x = 'dt', y ='cnt_cumsum_sold')
-    fig5['data'][0]['line']['color']="#8b00ff"
+    fig1 = px.line(curr_data, x='dt', y='cnt_cumsum_sold')
+    fig2 = px.line(predicted_data, x='dt', y='cnt_cumsum_sold')
+    fig2['data'][0]['line']['color'] = "#ffa500"
+    fig2['data'][0]['line']['dash'] = "dot"
+    fig5 = px.line(test, x='dt', y='cnt_cumsum_sold')
+    fig5['data'][0]['line']['color'] = "#8b00ff"
 
-    fig3 = px.line(curr_data, x = 'dt', y ='cnt_cumsum_entry')
-    fig3['data'][0]['line']['color']="#ff2b2b"
-    fig4 = px.line(predicted_data, x = 'dt', y ='cnt_cumsum_entry')
-    fig4['data'][0]['line']['color']="#008000"
-    fig4['data'][0]['line']['dash']="dot"
-    fig6 = px.line(test, x = 'dt', y ='cnt_cumsum_entry')
-    fig6['data'][0]['line']['color']="#9b2d30"
+    fig3 = px.line(curr_data, x='dt', y='cnt_cumsum_entry')
+    fig3['data'][0]['line']['color'] = "#ff2b2b"
+    fig4 = px.line(predicted_data, x='dt', y='cnt_cumsum_entry')
+    fig4['data'][0]['line']['color'] = "#008000"
+    fig4['data'][0]['line']['dash'] = "dot"
+    fig6 = px.line(test, x='dt', y='cnt_cumsum_entry')
+    fig6['data'][0]['line']['color'] = "#9b2d30"
 
     fig = go.Figure(data=fig1.data + fig2.data + fig3.data + fig4.data + fig5.data + fig6.data)
     fig.update_layout(showlegend=True)
