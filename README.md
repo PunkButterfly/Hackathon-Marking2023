@@ -83,4 +83,5 @@ prediction_models
 │   └── build_reg_graphs.py <- обучение модели, получение предсказаний по спросу в регионах для страницы Predicting
 └── rus
     └── build_rus_graphs.py <- обучение модели, получение предсказаний спроса по стране для страницы PredictingEntity
+process_data.ipynb <- ноутбук для обработки данных
 ```
