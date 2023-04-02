@@ -68,6 +68,8 @@ $$\text{metric}:=\frac{\text{(last predicted enty cumsum} - \text{last predicted
 ## Исходный код
 Исходный код веб-сервиса, обработки данных и построения предиктов моделями находится в [github-репозитории](https://github.com/PunkButterfly/Hackathon-MarkingHack).
 
+Дерево файлов в репозитории
+
 ```
 pages
 ├── Analytics.py <- аналитика по дистрибьютерам, вывод страницы Analytics
