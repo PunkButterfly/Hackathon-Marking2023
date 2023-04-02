@@ -64,7 +64,6 @@ gtin = st.text_input("Товар:", "5FC9EBED793E0DA01BCD8652E0FB1B70")
 
 sample = get_data(data, gtin, int(reg_id)).sort_values('dt')
 
-
 if sample is not None:
     if len(sample) == 0:
         st.warning('Недостаточно данных')
@@ -79,7 +78,6 @@ st.subheader("Риск дефицита товара по регионам")
 # gtin = st.text_input("Товар:", "5FC9EBED793E0DA01BCD8652E0FB1B70", key="map")
 gtin = st.selectbox("Товар:", get_gtins(data))
 
-
 okato = pd.read_csv('data/okato.csv')
 russia_regions = gpd.read_file('data/regions_new.geojson')
 
@@ -88,8 +86,13 @@ metrics = sorted[sorted["gtin"] == gtin]["metric"].to_list()
 
 dictionary = {"REGION_ID": [], "values": []}
 
+# читаем okato и создаём словарь
+regions_mapping = {}
+for i in range(len(okato)):
+    regions_mapping[okato['ISO'][i]] = okato['ОКАТО'][i]
+
 index = 0
-for i in range(0, 85):
+for i in regions_mapping.values():
     if i in regions:
         index = regions.index(i)
 
@@ -121,8 +124,8 @@ rel_ = folium.Choropleth(
     columns=['REGION_ID', 'values'],
     key_on='feature.properties.REGION_ID',
     bins=5,
-    fill_color='PuRd',
-    nan_fill_color='darkblue',
+    fill_color='YlOrRd',
+    nan_fill_color='white',
     nan_fill_opacity=0.5,
     fill_opacity=0.7,
     line_opacity=0.2,
@@ -135,4 +138,4 @@ rel_.add_to(m)
 
 m.save('maps/predictions_map.html')
 
-components.html(open("maps/predictions_map.html", 'r', encoding='utf-8').read(), height=800)
+components.html(open("maps/predictions_map.html", 'r', encoding='utf-8').read(), height=500)

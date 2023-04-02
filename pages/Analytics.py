@@ -134,8 +134,6 @@ marker_cluster = MarkerCluster().add_to(m)
 for i in range(len(df)):
     x = okato.loc[int(df.iloc[i]['REGION_ID'])]
 
-    print("REGION_ID:", i, type(df['places'].loc[i]))
-
     if isinstance(df['places'].loc[i], pd.DataFrame):
         table = df['places'].loc[i].to_html()
     else:
@@ -162,4 +160,4 @@ rel_.add_to(m)
 
 m.save('maps/analytics_map.html')
 
-components.html(open("maps/analytics_map.html", 'r', encoding='utf-8').read(), height=800)
+components.html(open("maps/analytics_map.html", 'r', encoding='utf-8').read(), height=500)
