@@ -5,7 +5,7 @@ import numpy as np
 app = Flask(__name__)
 
 # Sample data for demonstration purposes
-data = pd.read_csv(r"C:\Users\Alex\Desktop\projects\hack\week_closed_gtin.csv")
+data = pd.read_csv(r"data\week_closed_gtin.csv")
 
 @app.route('/get_data', methods=['POST'])
 def get_data():
