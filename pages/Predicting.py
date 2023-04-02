@@ -7,6 +7,8 @@ import numpy as np
 import geopandas as gpd
 import folium
 
+st.set_page_config(layout="wide")
+
 
 def plot_graph(df):
     curr_data = df[df['type'] == 'real_data'][['cnt', 'dt']]
@@ -133,4 +135,4 @@ rel_.add_to(m)
 
 m.save('maps/predictions_map.html')
 
-components.html(open("maps/predictions_map.html", 'r', encoding='utf-8').read(), height=500)
+components.html(open("maps/predictions_map.html", 'r', encoding='utf-8').read(), height=800)
