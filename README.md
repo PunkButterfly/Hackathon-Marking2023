@@ -38,7 +38,7 @@ $HHI_I = s_1^2 + s_2^2 + \ldots + s_n^2$ -- индекс Хиршмана-Хер
 
 Тогда **метрика** вводится как 
 
-$$\color{red}\boxed{\color{black}\text{metric}:=\frac{\text{predicted window max} - \text{previous window max}}{\text{previous window max}}}$$
+$$\text{metric}:=\frac{\text{predicted window max} - \text{previous window max}}{\text{previous window max}}$$
 
 Чем **больше** это значение, тем более резкий скачок роста спроса на товар может произойти в регионе. 
 
@@ -57,7 +57,7 @@ $$\color{red}\boxed{\color{black}\text{metric}:=\frac{\text{predicted window max
 
 Тогда мeтрика считается как:
 
-$$\color{red}\boxed{\color{black}\text{metric}:=\frac{\text{(last predicted enty cumsum} - \text{last predicted sold cumsum}}{\text{last predicted enty cumsum}}}$$
+$$\text{metric}:=\frac{\text{(last predicted enty cumsum} - \text{last predicted sold cumsum}}{\text{last predicted enty cumsum}}$$
 
 Метрика показывает насколько процентов предсказанный вывод товара из оборота меньше ввода в оборот. Чем ниже процент, тем больше в стране требуется конкретного товара (отрицательный процент означает, что вывод товара превысит поставки). 
 
