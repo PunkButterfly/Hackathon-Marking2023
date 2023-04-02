@@ -70,8 +70,6 @@ def get_reg_ids(data):
 
 data = pd.read_csv("data/global_predicts_test.csv")
 
-st.title("Прогнозирование межрегионального спроса и поставок (cumulative)")
-
 # Риск дефицита
 st.subheader("Оценка рисков дефицита определенного товара")
 
