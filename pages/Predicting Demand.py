@@ -9,6 +9,24 @@ import folium
 
 st.set_page_config(layout="wide")
 
+st.title("Прогнозирование спроса")
+
+st.markdown("Когда возникает локальный дефицит товара, государство заинтересовано в предотвращении этого дефицита, "
+            "поэтому ему (государству) выгодно привлекать производителей товара в регион, где ожидается резкий скачек "
+            "роста на спрос по товару (группе товаров).  \n"
+            "Для предотвращения дефицита мы разработали систему прогнозирования спроса на конкретный `gtin` в конкретном регионе. "
+            "В качестве модели используется нейронная сеть LSTM, обучающаяся на данных о спросе для каждой уникальной пары (`gtin`, `reg_id`), "
+            "а затем считающая предсказания спроса на 12 недель вперед. "
+            "В рамках хакатона для увеличения скорости вычислений мы решили взять только 100 уникальных `gtin` самых популярных (по спросу).  \n"
+            "В системе можно увидеть карту регионов, на которой при вводе `gtin` подсвечиваются регионы с максимальной введеной нами **метрикой**. Пусть  \n"
+            r"* $\text{predicted window max}$ -- максимальное значение известного спроса за последние 12 недель  " + "\n" +
+            r"* $\text{previous window max}$ -- максимальное значение предсказанного спроса за следующие 12 недель.  " + "\n" +
+            "Тогда **метрика** вводится как  \n"
+            r"$$\text{metric}:=\frac{\text{predicted window max} - \text{previous window max}}{\text{previous window max}}$$  " + "\n" +
+            r"Чем **больше** это значение, тем более резкий скачок роста спроса на товар может произойти в регионе. "
+            r"Данная разработка может помочь государству выделить регионы, в которые стоит привлечь поставщиков конкретных товаров. "
+            r"Для привлечения можно использовать льготы, по типу освобождения от налогов и т.п.")
+
 
 def plot_graph(df):
     curr_data = df[df['type'] == 'real_data'][['cnt', 'dt']]
@@ -39,7 +57,6 @@ def get_reg_ids(data):
 
 data = pd.read_csv("data/regional_predictions.csv")
 
-st.title("Прогнозирование спроса")
 
 # Риск дефицита
 st.subheader("Риск резкого повышения потребления")
@@ -57,10 +74,11 @@ st.dataframe(sorted[["gtin", "reg_id", "metric"]])
 
 # Выбор интересных gtin и региона
 st.subheader("Показатели товара в регионе")
-reg_id = st.text_input("Регион:", "50")
-gtin = st.text_input("Товар:", "5FC9EBED793E0DA01BCD8652E0FB1B70")
-# reg_id = st.selectbox("Регион:", sorted(get_reg_ids(data)))
-# gtins = st.selectbox("Товар:", get_gtins(data))
+# reg_id = st.text_input("Регион:", "50")
+# gtin = st.text_input("GTIN товара:", "5FC9EBED793E0DA01BCD8652E0FB1B70")
+
+reg_id = st.selectbox("Регион:", get_reg_ids(sorted))
+gtin = st.selectbox("GTIN товара:", get_gtins(sorted))
 
 sample = get_data(data, gtin, int(reg_id)).sort_values('dt')
 
@@ -76,7 +94,7 @@ if sample is not None:
 st.subheader("Риск дефицита товара по регионам")
 
 # gtin = st.text_input("Товар:", "5FC9EBED793E0DA01BCD8652E0FB1B70", key="map")
-gtin = st.selectbox("Товар:", get_gtins(data))
+gtin = st.selectbox("GTIN товара::", get_gtins(data))
 
 okato = pd.read_csv('data/okato.csv')
 russia_regions = gpd.read_file('data/regions_new.geojson')
