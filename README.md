@@ -67,3 +67,16 @@ $$\text{metric}:=\frac{\text{(last predicted enty cumsum} - \text{last predicted
 
 ## Исходный код
 Исходный код веб-сервиса, обработки данных и построения предиктов моделями находится в [github-репозитории](https://github.com/PunkButterfly/Hackathon-MarkingHack).
+
+```
+pages
+├── Analytics.py <- аналитика по дистрибьютерам, вывод страницы Analytics
+├── Deviance.py <- поиск монополий по индексу Хиршмана-Херфиндаля, вывод страницы Deviance
+├── Predicting.py <- прогнозирование спроса по регионам, вывод страницы Predicting
+└── PredictingEntity.py <- прогнозирование спроса и поставок по стране, вывод страницы PredictingEntity
+prediction_models
+├── regs
+│   └── build_reg_graphs.py <- обучение модели, получение предсказаний по спросу в регионах для страницы Predicting
+└── rus
+    └── build_rus_graphs.py <- обучение модели, получение предсказаний спроса по стране для страницы PredictingEntity
+```
