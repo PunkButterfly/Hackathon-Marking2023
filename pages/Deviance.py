@@ -31,7 +31,7 @@ def getGroupHHIInfo(tnved10):
     return int(HHI), result.sort_values(by=['cnt'], ascending=False)
 
 
-start_date = st.date_input("Начало периода", dt(2021, 11, 22))
+start_date = st.date_input("Начало периода, в котором рассматриваются поставки", dt(2021, 11, 22))
 end_date = st.date_input("Конец периода", dt(2022, 11, 22))
 
 goods_data_filtered = goods_data[(goods_data["dt"] >= start_date) &

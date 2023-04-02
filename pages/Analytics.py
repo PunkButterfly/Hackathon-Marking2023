@@ -14,6 +14,15 @@ sale_fields = ['Продажа конечному потребителю в то
                'Конечная продажа организации', 'Продажи за пределы РФ',
                'Продажа по государственному контракту']
 
+description = "Государству интересно видеть аномальные показатели продаж для выявления потенциально подозрительных торговых точек.  \n\n" \
+              "В качестве бейзлайна для проведения аналитики мы используем показатели цены:  \n" \
+              "**Аномально высокую минимальную цену (аномально низкую максимальную)** у ретейлера на товар с конкретным `gtin` относительно окружающих его регионов. " \
+              "Смотрим, какой ретейл продал выбранный `gtin` в регионе по минимальной цене в заданный промежуток времени. " \
+              "Отображается карта регионов, на которой они имеют соответствующую раскраску, исходя из показателя минимальный цены на данный товар.  \n\n" \
+              "> Реализован анализ минимальной, максимальной и средней цен, однако также могут быть рассмотрены объемы продаж и разнообразие товаров, продаваемых ритейлером."
+st.header("Просмотр показателей ритейлеров")
+st.markdown(description, unsafe_allow_html=False)
+
 closings = pd.read_parquet("data/Output_short.parquet", engine="fastparquet")  # "data/Output.parquet"
 closings["dt"] = closings["dt"].apply(lambda x: dt.strptime(x, '%Y-%m-%d').date())
 
@@ -47,10 +56,16 @@ def group_region_retails(product_gtin: str, start_date, end_date):
 
         # min_places.append([sales.iloc[group["price"].idxmin()]["inn"]])
         # max_places.append([sales.iloc[group["price"].idxmax()]["inn"]])
+        new_columns = ["Владелец карточки товара", "ИНН участника, выводившего из оборота",
+                       "Точка продажи", "Цена", "Количество"]
 
-        min_places.append(group.sort_values(by="price")[["prid", "inn", "id_sp_", "price", "cnt"]].iloc[:5])
-        max_places.append(group.sort_values(by="price")[["prid", "inn", "id_sp_", "price", "cnt"]].iloc[-5:])
+        min_samle = group.sort_values(by="price")[["prid", "inn", "id_sp_", "price", "cnt"]].iloc[:5]
+        min_samle.columns = new_columns
+        min_places.append(min_samle)
 
+        max_samle = group.sort_values(by="price")[["prid", "inn", "id_sp_", "price", "cnt"]].iloc[-5:]
+        max_samle.columns = new_columns
+        max_places.append(max_samle)
 
     result = {"regions": list(grouped.groups.keys()),
               "mean_prices": grouped["price"].mean().to_list(),
@@ -64,9 +79,10 @@ def group_region_retails(product_gtin: str, start_date, end_date):
 
 okato = pd.read_csv('data/okato.csv')
 
-product_gtin = st.text_input("GTIN товара:", "1248F88441BCFC563FB99D77DB0BB80D")
-value_type = st.selectbox("Тип значений", ["Минимальная цена", "Максимальная цена", "Средняя цена"])
-start_date = st.date_input("Начало периода", dt(2021, 11, 22))
+product_gtin = st.text_input("GTIN интересующего товара, цены на который будут анализироваться:",
+                             "1248F88441BCFC563FB99D77DB0BB80D")
+value_type = st.selectbox("Тип значений для анализа", ["Минимальная цена", "Максимальная цена", "Средняя цена"])
+start_date = st.date_input("Начало периода, в котором рассматриваются продажи", dt(2021, 11, 22))
 end_date = st.date_input("Конец периода", dt(2022, 11, 22))
 
 value_type_mapping = {"Минимальная цена": "min_prices",
@@ -139,15 +155,14 @@ for i in range(len(df)):
     else:
         table = None
 
-    if value_type == "Максимальная цена":
-        popup_desc = f"<font size='-5'><strong>Максимальная цена: {df['values'].loc[i]}<br>Подозрительный дистрибьютор: {table}</strong></font>"
+    if value_type == "Максимальная цена": # Максимальная цена: {df['values'].loc[i]}<br>Подозрительный дистрибьютор:
+        popup_desc = f"<font size='-5'><strong>{table}</strong></font>"
     elif value_type == "Минимальная цена":
-        popup_desc = f"<font size='-5'><strong>Минимальная цена: {df['values'].loc[i]}<br>Подозрительный дистрибьютор: {table}</strong></font>"
+        popup_desc = f"<font size='-5'><strong>{table}</strong></font>"
     else:
         popup_desc = f"<font size='+0.5'><strong>Средняя цена: {df['values'].loc[i]}</strong></font>"
 
     if ~np.isnan(df['values'].loc[i]):
-
         folium.Marker(
             location=[x['Ширина'],
                       x['Долгота']],
@@ -159,5 +174,7 @@ for i in range(len(df)):
 rel_.add_to(m)
 
 m.save('maps/analytics_map.html')
+
+st.write("При нажатии на метки регионов отображаются подозрительные продажи в регионе, точки этих продаж, ИНН продающих организаций, производители товара")
 
 components.html(open("maps/analytics_map.html", 'r', encoding='utf-8').read(), height=500)

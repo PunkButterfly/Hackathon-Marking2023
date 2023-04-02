@@ -7,23 +7,35 @@ import numpy as np
 import geopandas as gpd
 import folium
 
+st.set_page_config(layout="wide")
+
 
 def plot_graph(df):
     curr_data = df[df['type'] == 'real_data'][['cnt_cumsum_entry', 'cnt_cumsum_sold', 'dt']]
-    predicted_data = df[df['type'] != 'real_data'][['cnt_cumsum_entry', 'cnt_cumsum_sold', 'dt']]
+    predicted_data = df[df['type'] == 'predicted'][['cnt_cumsum_entry', 'cnt_cumsum_sold', 'dt']]
+
+    test = df[df['type'] == 'test'][['cnt_cumsum_entry', 'cnt_cumsum_sold', 'dt']]
+
+    test['cnt_cumsum_entry'] += curr_data['cnt_cumsum_entry'][-1:].values
+    test['cnt_cumsum_sold'] += curr_data['cnt_cumsum_sold'][-1:].values
 
     fig1 = px.line(curr_data, x = 'dt', y ='cnt_cumsum_sold')
     fig2 = px.line(predicted_data, x = 'dt', y ='cnt_cumsum_sold')
     fig2['data'][0]['line']['color']="#ffa500"
     fig2['data'][0]['line']['dash']="dot"
+    fig5 = px.line(test, x = 'dt', y ='cnt_cumsum_sold')
+    fig5['data'][0]['line']['color']="#8b00ff"
 
     fig3 = px.line(curr_data, x = 'dt', y ='cnt_cumsum_entry')
     fig3['data'][0]['line']['color']="#ff2b2b"
     fig4 = px.line(predicted_data, x = 'dt', y ='cnt_cumsum_entry')
     fig4['data'][0]['line']['color']="#008000"
     fig4['data'][0]['line']['dash']="dot"
+    fig6 = px.line(test, x = 'dt', y ='cnt_cumsum_entry')
+    fig6['data'][0]['line']['color']="#9b2d30"
 
-    fig = go.Figure(data=fig1.data + fig2.data + fig3.data + fig4.data)
+    fig = go.Figure(data=fig1.data + fig2.data + fig3.data + fig4.data + fig5.data + fig6.data)
+    fig.update_layout(showlegend=True)
     return fig
 
 
@@ -43,12 +55,12 @@ def get_reg_ids(data):
     return result
 
 
-data = pd.read_csv("data/global_predictions.csv")
+data = pd.read_csv("data/global_predicts_test.csv")
 
-st.title("Прогнозирование спроса и поставок (cumulative)")
+st.title("Прогнозирование межрегионального спроса и поставок (cumulative)")
 
 # Риск дефицита
-st.subheader("Риск дефицита")
+st.subheader("Оценка рисков дефицита определенного товара")
 
 sorted_gtins = data.drop_duplicates(subset=["gtin", "metric"]).sort_values(by="metric", ascending=True)["gtin"]
 
