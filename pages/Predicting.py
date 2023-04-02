@@ -40,7 +40,7 @@ data = pd.read_csv("data/regional_predictions.csv")
 st.title("Прогнозирование спроса")
 
 # Риск дефицита
-st.subheader("Риск дефицита")
+st.subheader("Риск резкого повышения потребления")
 
 # filtered = data.groupby(["gtin", "reg_id", "metric"], group_keys=True).filter(lambda x: x["metric"].min() > 0)
 # print(type(filtered.groupby(["gtin", "reg_id", "metric"], group_keys=True)["metric"].min().sort_values(ascending=False)))
@@ -74,7 +74,9 @@ if sample is not None:
 # Риск дефицита товара по регионам
 st.subheader("Риск дефицита товара по регионам")
 
-gtin = st.text_input("Товар:", "5FC9EBED793E0DA01BCD8652E0FB1B70", key="map")
+# gtin = st.text_input("Товар:", "5FC9EBED793E0DA01BCD8652E0FB1B70", key="map")
+gtin = st.selectbox("Товар:", get_gtins(data))
+
 
 okato = pd.read_csv('data/okato.csv')
 russia_regions = gpd.read_file('data/regions_new.geojson')
@@ -117,7 +119,7 @@ rel_ = folium.Choropleth(
     columns=['REGION_ID', 'values'],
     key_on='feature.properties.REGION_ID',
     bins=5,
-    fill_color='BuGn',
+    fill_color='PuRd',
     nan_fill_color='darkblue',
     nan_fill_opacity=0.5,
     fill_opacity=0.7,
@@ -131,4 +133,4 @@ rel_.add_to(m)
 
 m.save('maps/predictions_map.html')
 
-components.html(open("maps/predictions_map.html", 'r', encoding='utf-8').read())
+components.html(open("maps/predictions_map.html", 'r', encoding='utf-8').read(), height=500)
