@@ -12,8 +12,7 @@ goods_data["dt"] = goods_data["dt"].apply(lambda x: dt.strptime(x, '%Y-%m-%d').d
 
 def getGroupHHIInfo(tnved10):
     curGoodsHandbook = goods_handbook[goods_handbook['tnved10'] == tnved10]
-    goods_data_filtered = goods_data[(goods_data["dt"] >= start_date) &
-                                     (goods_data["dt"] <= end_date)][['dt', 'gtin', 'inn', 'cnt']]
+
     merged_df = pd.merge(goods_data_filtered, curGoodsHandbook, on='gtin')
     result = merged_df.groupby(['inn'])['cnt'].sum().reset_index()
 
@@ -34,6 +33,9 @@ def getGroupHHIInfo(tnved10):
 
 start_date = st.date_input("Начало периода", dt(2021, 11, 22))
 end_date = st.date_input("Конец периода", dt(2022, 11, 22))
+
+goods_data = goods_data[(goods_data["dt"] >= start_date) &
+                                     (goods_data["dt"] <= end_date)][['dt', 'gtin', 'inn', 'cnt']]
 
 tnveds = goods_handbook['tnved10'].unique()
 metrics = []
