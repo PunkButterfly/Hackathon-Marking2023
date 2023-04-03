@@ -58,7 +58,7 @@ def group_region_retails(product_gtin: str, start_date, end_date):
 
         # min_places.append([sales.iloc[group["price"].idxmin()]["inn"]])
         # max_places.append([sales.iloc[group["price"].idxmax()]["inn"]])
-        new_columns = ["Владелец карточки товара", "ИНН участника, выводившего из оборота",
+        new_columns = ["Владелец карточки товара", "ИНН ритейлера",
                        "Точка продажи", "Цена", "Количество"]
 
         min_samle = group.sort_values(by="price")[["prid", "inn", "id_sp_", "price", "cnt"]].iloc[:5]

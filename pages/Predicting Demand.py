@@ -73,15 +73,15 @@ sorted = data.drop_duplicates(subset=["gtin", "reg_id", "metric"], keep="first")
 # grouped = data.groupby(by=["gtin", "reg_id", "metric"])
 # print(len(sorted), len(grouped))
 
-st.dataframe(sorted[["gtin", "reg_id", "metric"]])
+st.dataframe(sorted[["gtin", "reg_id", "metric"]].reset_index(drop=True))
 
 # Выбор интересных gtin и региона
 st.subheader("Показатели товара в регионе")
-# reg_id = st.text_input("Регион:", "50")
 # gtin = st.text_input("GTIN товара:", "5FC9EBED793E0DA01BCD8652E0FB1B70")
+# reg_id = st.text_input("Регион:", "50")
 
-reg_id = st.selectbox("Регион:", get_reg_ids(sorted))
 gtin = st.selectbox("GTIN товара:", get_gtins(sorted))
+reg_id = st.selectbox("Регион:", get_reg_ids(sorted))
 
 sample = get_data(data, gtin, int(reg_id)).sort_values('dt')
 
