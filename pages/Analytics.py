@@ -114,10 +114,12 @@ for i in regions_mapping.values():
             dictionary["places"].append(retails_features["max_places"][index])
         elif value_type == "Минимальная цена":
             dictionary["places"].append(retails_features["min_places"][index])
+        else:
+            dictionary["places"].append(np.NaN)
     else:
         dictionary["REGION_ID"].append(i)
         dictionary["values"].append(np.NaN)
-        dictionary["places"].append([])
+        dictionary["places"].append(np.NaN)
 
 df = pd.DataFrame(dictionary)
 
@@ -178,6 +180,6 @@ rel_.add_to(m)
 
 m.save('maps/analytics_map.html')
 
-st.write("При нажатии на метки регионов отображаются подозрительные продажи в регионе, точки этих продаж, ИНН продающих организаций, производители товара")
+st.write("При нажатии на метки регионов отображаются подозрительные продажи в регионе, точки этих продаж, ИНН продающих организаций, производители товара, цены")
 
 components.html(open("maps/analytics_map.html", 'r', encoding='utf-8').read(), height=500)
