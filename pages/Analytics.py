@@ -11,30 +11,10 @@ print(dt.now(), "Analytics Visited")
 
 st.set_page_config(layout="wide")
 
-sale_fields = ['Продажа конечному потребителю в точке продаж',
-               'Дистанционная продажа конечному потребителю',
-               'Конечная продажа организации', 'Продажи за пределы РФ',
-               'Продажа по государственному контракту']
-
-description = "Государству интересно видеть аномальные показатели продаж для выявления потенциально подозрительных торговых точек.  \n\n" \
-              "В качестве бейзлайна для проведения аналитики мы используем показатели цены:  \n" \
-              "**Аномально высокую минимальную цену (аномально низкую максимальную)** у ретейлера на товар с конкретным `gtin` относительно окружающих его регионов. " \
-              "Смотрим, какой ретейл продал выбранный `gtin` в регионе по минимальной цене в заданный промежуток времени. " \
-              "Отображается карта регионов, на которой они имеют соответствующую раскраску, исходя из показателя минимальный цены на данный товар.  \n\n" \
-              "> Реализован анализ минимальной, максимальной и средней цен, однако также могут быть рассмотрены объемы продаж и разнообразие товаров, продаваемых ритейлером."
-st.header("Просмотр показателей ритейлеров")
-st.markdown(description, unsafe_allow_html=False)
-
-closings = pd.read_parquet("data/Output_short.parquet", engine="fastparquet")  # "data/Output.parquet"
-closings["dt"] = closings["dt"].apply(lambda x: dt.strptime(x, '%Y-%m-%d').date())
-
-products = pd.read_csv("data/Products.csv")
-retails = pd.read_csv("data/Places.csv")
-
 
 def group_region_retails(product_gtin: str, start_date, end_date):
-    # gtin товаров определенной категории
-    # product_ids = self.products[self.products['product_short_name'] == product_type]['gtin']
+    places_columns = ["Владелец карточки товара", "ИНН ритейлера",
+                      "Точка продажи", "Цена", "Количество"]
 
     # Проданные товары определенного gtin
     sales = closings[(closings['gtin'] == product_gtin) &
@@ -51,52 +31,79 @@ def group_region_retails(product_gtin: str, start_date, end_date):
 
     min_places = []
     max_places = []
+    volumes = []
+    max_volumes = []
+    nans = []
     for name, group in grouped:
-        # print(group)
-        # print(group.groupby(by="inn", group_keys=True))
-        # group.groupby(by="inn", group_keys=True)
+        nans.append(np.NaN)
 
-        # min_places.append([sales.iloc[group["price"].idxmin()]["inn"]])
-        # max_places.append([sales.iloc[group["price"].idxmax()]["inn"]])
-        new_columns = ["Владелец карточки товара", "ИНН ритейлера",
-                       "Точка продажи", "Цена", "Количество"]
+        min_sample = group.sort_values(by="price")[["prid", "inn", "id_sp_", "price", "cnt"]].iloc[:5]
+        min_sample.columns = places_columns
+        min_places.append(min_sample)
 
-        min_samle = group.sort_values(by="price")[["prid", "inn", "id_sp_", "price", "cnt"]].iloc[:5]
-        min_samle.columns = new_columns
-        min_places.append(min_samle)
+        max_sample = group.sort_values(by="price")[["prid", "inn", "id_sp_", "price", "cnt"]].iloc[-5:]
+        max_sample.columns = places_columns
+        max_places.append(max_sample)
 
-        max_samle = group.sort_values(by="price")[["prid", "inn", "id_sp_", "price", "cnt"]].iloc[-5:]
-        max_samle.columns = new_columns
-        max_places.append(max_samle)
+        volume_grouped = group.groupby(by="inn").agg({"cnt": 'sum'})\
+            .sort_values(by='cnt', ascending=False).reset_index(names=['ИНН ритейлера'])
+        volume_grouped.columns = ["ИНН ритейлера", "Объем продаж"]
+
+        volumes.append(volume_grouped.iloc[0:5])
+        max_volumes.append(volume_grouped.iloc[0]["Объем продаж"])
 
     result = {"regions": list(grouped.groups.keys()),
               "mean_prices": grouped["price"].mean().to_list(),
               "min_prices": grouped["price"].min().to_list(),
               "min_places": min_places,
               "max_prices": grouped["price"].max().to_list(),
-              "max_places": max_places}
+              "max_places": max_places,
+              "volumes": volumes,
+              "max_volumes": max_volumes,
+              "nans": nans}
 
     return result
 
+
+sale_fields = ['Продажа конечному потребителю в точке продаж',
+               'Дистанционная продажа конечному потребителю',
+               'Конечная продажа организации', 'Продажи за пределы РФ',
+               'Продажа по государственному контракту']
+
+value_type_mapping = {"Минимальная цена": ("min_prices", "min_places"),
+                      "Максимальная цена": ("max_prices", "max_places"),
+                      "Средняя цена": ("mean_prices", "nans"),
+                      "Объем продаж": ("max_volumes", "volumes")}
+
+description = "Государству интересно видеть аномальные показатели продаж для выявления потенциально подозрительных торговых точек.  \n\n" \
+              "В качестве бейзлайна для проведения аналитики мы используем показатели цены:  \n" \
+              "**Аномально высокую минимальную цену (аномально низкую максимальную)** у ретейлера на товар с конкретным `gtin` относительно окружающих его регионов. " \
+              "Смотрим, какой ретейл продал выбранный `gtin` в регионе по минимальной цене в заданный промежуток времени. " \
+              "Отображается карта регионов, на которой они имеют соответствующую раскраску, исходя из показателя минимальный цены на данный товар.  \n\n" \
+              "> Реализован анализ минимальной, максимальной и средней цен, однако также могут быть рассмотрены объемы продаж и разнообразие товаров, продаваемых ритейлером."
+st.header("Просмотр показателей ритейлеров")
+st.markdown(description, unsafe_allow_html=False)
+
+closings = pd.read_parquet("data/Output_short.parquet", engine="fastparquet")  # "data/Output.parquet"
+closings["dt"] = closings["dt"].apply(lambda x: dt.strptime(x, '%Y-%m-%d').date())
+
+products = pd.read_csv("data/Products.csv")
+retails = pd.read_csv("data/Places.csv")
 
 okato = pd.read_csv('data/okato.csv')
 
 # product_gtin = st.text_input("GTIN интересующего товара, цены на который будут анализироваться:",
 #                              "1248F88441BCFC563FB99D77DB0BB80D")
 product_gtin = st.selectbox("GTIN интересующего товара", closings["gtin"].unique())
-value_type = st.selectbox("Тип значений для анализа", ["Минимальная цена", "Максимальная цена", "Средняя цена"])
+value_type = st.selectbox("Тип значений для анализа", list(value_type_mapping.keys()))
 start_date = st.date_input("Начало периода, в котором рассматриваются продажи", dt(2021, 11, 22))
 end_date = st.date_input("Конец периода", dt(2022, 11, 22))
-
-value_type_mapping = {"Минимальная цена": "min_prices",
-                      "Максимальная цена": "max_prices",
-                      "Средняя цена": "mean_prices"}
 
 retails_features = group_region_retails(product_gtin, start_date, end_date)
 
 russia_regions = gpd.read_file('data/regions_new.geojson')
 
-dictionary = {"REGION_ID": [], "values": [], "places": []}
+dictionary = {"REGION_ID": [], "values": [], "tables": []}
 
 # читаем okato и создаём словарь
 regions_mapping = {}
@@ -109,17 +116,12 @@ for i in regions_mapping.values():
         index = retails_features["regions"].index(i)
 
         dictionary["REGION_ID"].append(i)
-        dictionary["values"].append(retails_features[value_type_mapping[value_type]][index])
-        if value_type == "Максимальная цена":
-            dictionary["places"].append(retails_features["max_places"][index])
-        elif value_type == "Минимальная цена":
-            dictionary["places"].append(retails_features["min_places"][index])
-        else:
-            dictionary["places"].append(np.NaN)
+        dictionary["values"].append(retails_features[value_type_mapping[value_type][0]][index])
+        dictionary["tables"].append(retails_features[value_type_mapping[value_type][1]][index])
     else:
         dictionary["REGION_ID"].append(i)
         dictionary["values"].append(np.NaN)
-        dictionary["places"].append(np.NaN)
+        dictionary["tables"].append(np.NaN)
 
 df = pd.DataFrame(dictionary)
 
@@ -155,17 +157,15 @@ marker_cluster = MarkerCluster().add_to(m)
 for i in range(len(df)):
     x = okato.loc[int(df.iloc[i]['REGION_ID'])]
 
-    if isinstance(df['places'].loc[i], pd.DataFrame):
-        table = df['places'].loc[i].to_html()
+    if isinstance(df['tables'].loc[i], pd.DataFrame):
+        table = df['tables'].loc[i].to_html()
     else:
         table = None
 
-    if value_type == "Максимальная цена": # Максимальная цена: {df['values'].loc[i]}<br>Подозрительный дистрибьютор:
-        popup_desc = f"<font size='-5'><strong>{table}</strong></font>"
-    elif value_type == "Минимальная цена":
-        popup_desc = f"<font size='-5'><strong>{table}</strong></font>"
-    else:
+    if value_type == "Средняя цена":
         popup_desc = f"<font size='+0.5'><strong>Средняя цена: {df['values'].loc[i]}</strong></font>"
+    else:
+        popup_desc = f"<font size='-5'><strong>{table}</strong></font>"
 
     if ~np.isnan(df['values'].loc[i]):
         folium.Marker(
@@ -180,6 +180,7 @@ rel_.add_to(m)
 
 m.save('maps/analytics_map.html')
 
-st.write("При нажатии на метки регионов отображаются подозрительные продажи в регионе, точки этих продаж, ИНН продающих организаций, производители товара, цены")
+st.write(
+    "При нажатии на метки регионов отображаются подозрительные продажи в регионе, точки этих продаж, ИНН продающих организаций, производители товара, цены")
 
 components.html(open("maps/analytics_map.html", 'r', encoding='utf-8').read(), height=500)
