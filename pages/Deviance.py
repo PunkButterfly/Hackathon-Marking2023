@@ -41,6 +41,8 @@ def getGroupHHIInfo(tnved10):
 start_date = st.date_input("Начало периода, в котором рассматриваются поставки", dt(2021, 11, 22))
 end_date = st.date_input("Конец периода", dt(2022, 11, 22))
 
+progress_bar = st.progress(0, text="Подсчет метрик для выбранного периода...")
+
 goods_handbook = pd.read_csv('data/Products.csv')[['gtin', 'tnved10']]
 
 # goods_data = goods_data[['gtin', 'inn', 'cnt']]
@@ -48,27 +50,29 @@ goods_data = pd.read_csv('data/Input.csv')
 goods_data["dt"] = goods_data["dt"].apply(lambda x: dt.strptime(x, '%Y-%m-%d').date())
 
 goods_data_filtered = goods_data[(goods_data["dt"] >= start_date) &
-                                     (goods_data["dt"] <= end_date)][['dt', 'gtin', 'inn', 'cnt']]
+                                 (goods_data["dt"] <= end_date)][['dt', 'gtin', 'inn', 'cnt']]
 
 # Предпосчитанное дефолтное значение
 try:
     scores = pd.read_csv(f"data/{start_date.strftime('%Y/%m/%d').replace('/', '_')}"
                          f"__{end_date.strftime('%Y/%m/%d').replace('/', '_')}_tnveds_hhi.csv",
-                         index_col=0).reset_index(drop=True)
-    st.dataframe(scores[scores["HHI"] > 0])
+                         index_col=0)
+    st.dataframe(scores[scores["HHI"] > 0].reset_index(drop=True))
 except:
     tnveds = goods_handbook['tnved10'].unique()
     metrics = []
 
-    for item in tnveds:
+    for counter, item in enumerate(tnveds):
         metrics.append(getGroupHHIInfo(item)[0])
 
-    scores = pd.DataFrame({"tnveds": tnveds, "HHI": metrics})\
-        .sort_values(by=['HHI'], ascending=False).reset_index(drop=True)
-    st.dataframe(scores[scores["HHI"] > 0])
+        progress_bar.progress((counter + 1) / tnveds.shape[0], text="Подсчет метрик для выбранного периода...")
+
+    scores = pd.DataFrame({"tnveds": tnveds, "HHI": metrics}) \
+        .sort_values(by=['HHI'], ascending=False)
+    st.dataframe(scores[scores["HHI"] > 0].reset_index(drop=True))
 
 #
 product_tnved = st.text_input("TNVED товара:", "DB208476C3C890F6A24E6BEAE2348127")
 
 volumes = getGroupHHIInfo(product_tnved)[1]
-st.dataframe(volumes)
+st.dataframe(volumes.reset_index(drop=True))
