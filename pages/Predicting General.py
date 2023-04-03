@@ -88,7 +88,7 @@ if sample is not None:
     if len(sample) == 0:
         st.warning('Недостаточно данных')
     else:
-        color = "green" if sample["metric"].values[0] < 0 else "red"
+        color = "green" if sample["metric"].values[0] > 0 else "red"
         st.markdown(f'<font color={color}><strong>Метрика: {sample["metric"].values[0]}</strong></font>', unsafe_allow_html=True)
         graph = plot_graph(sample)
         st.plotly_chart(graph)
