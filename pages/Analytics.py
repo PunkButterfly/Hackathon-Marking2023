@@ -37,11 +37,11 @@ def group_region_retails(product_gtin: str, start_date, end_date):
     for name, group in grouped:
         nans.append(np.NaN)
 
-        min_sample = group.sort_values(by="price")[["prid", "inn", "id_sp_", "price", "cnt"]].iloc[:5]
+        min_sample = group.sort_values(by="price", ascending=True)[["prid", "inn", "id_sp_", "price", "cnt"]].iloc[:5]
         min_sample.columns = places_columns
         min_places.append(min_sample)
 
-        max_sample = group.sort_values(by="price")[["prid", "inn", "id_sp_", "price", "cnt"]].iloc[-5:]
+        max_sample = group.sort_values(by="price", ascending=False)[["prid", "inn", "id_sp_", "price", "cnt"]].iloc[:5]
         max_sample.columns = places_columns
         max_places.append(max_sample)
 
@@ -76,11 +76,11 @@ value_type_mapping = {"Минимальная цена": ("min_prices", "min_pla
                       "Объем продаж": ("max_volumes", "volumes")}
 
 description = "Государству интересно видеть аномальные показатели продаж для выявления потенциально подозрительных торговых точек.  \n\n" \
-              "В качестве бейзлайна для проведения аналитики мы используем показатели цены:  \n" \
+              "Для проведения аналитики мы используем показатели цен:  \n" \
               "**Аномально высокую минимальную цену (аномально низкую максимальную)** у ретейлера на товар с конкретным `gtin` относительно окружающих его регионов. " \
               "Смотрим, какой ретейл продал выбранный `gtin` в регионе по минимальной цене в заданный промежуток времени. " \
-              "Отображается карта регионов, на которой они имеют соответствующую раскраску, исходя из показателя минимальный цены на данный товар.  \n\n" \
-              "> Реализован анализ минимальной, максимальной и средней цен, однако также могут быть рассмотрены объемы продаж и разнообразие товаров, продаваемых ритейлером."
+              "Отображается карта регионов, на которой они имеют соответствующую раскраску, исходя из показателя минимальный цены на данный товар.  \n\n"
+
 st.header("Просмотр показателей ритейлеров")
 st.markdown(description, unsafe_allow_html=False)
 

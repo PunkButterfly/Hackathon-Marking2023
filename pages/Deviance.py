@@ -41,8 +41,6 @@ def getGroupHHIInfo(tnved10):
 start_date = st.date_input("Начало периода, в котором рассматриваются поставки", dt(2021, 11, 22))
 end_date = st.date_input("Конец периода", dt(2022, 11, 22))
 
-progress_bar = st.progress(0, text="Подсчет метрик для выбранного периода...")
-
 goods_handbook = pd.read_csv('data/Products.csv')[['gtin', 'tnved10']]
 
 # goods_data = goods_data[['gtin', 'inn', 'cnt']]
@@ -61,6 +59,8 @@ try:
 except:
     tnveds = goods_handbook['tnved10'].unique()
     metrics = []
+
+    progress_bar = st.progress(0, text="Подсчет метрик для выбранного периода...")
 
     for counter, item in enumerate(tnveds):
         metrics.append(getGroupHHIInfo(item)[0])

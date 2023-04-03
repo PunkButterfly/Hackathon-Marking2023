@@ -64,14 +64,8 @@ data = pd.read_csv("data/regional_predictions.csv")
 # Риск дефицита
 st.subheader("Риск резкого повышения потребления")
 
-# filtered = data.groupby(["gtin", "reg_id", "metric"], group_keys=True).filter(lambda x: x["metric"].min() > 0)
-# print(type(filtered.groupby(["gtin", "reg_id", "metric"], group_keys=True)["metric"].min().sort_values(ascending=False)))
-
 sorted = data.drop_duplicates(subset=["gtin", "reg_id", "metric"], keep="first").sort_values(ascending=False,
                                                                                              by="metric")
-
-# grouped = data.groupby(by=["gtin", "reg_id", "metric"])
-# print(len(sorted), len(grouped))
 
 st.dataframe(sorted[["gtin", "reg_id", "metric"]].reset_index(drop=True))
 
@@ -89,7 +83,8 @@ if sample is not None:
     if len(sample) == 0:
         st.warning('Недостаточно данных')
     else:
-        st.text(sample['metric'].values[0])
+        color = "green" if sample["metric"].values[0] < 0 else "red"
+        st.markdown(f'<font color={color}><strong>Метрика: {sample["metric"].values[0]}</strong></font>', unsafe_allow_html=True)
         graph = plot_graph(sample)
         st.plotly_chart(graph)
 
