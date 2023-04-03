@@ -7,6 +7,8 @@ import geopandas as gpd
 import folium
 from folium.plugins import MarkerCluster
 
+print(dt.now(), "Analytics Visited")
+
 st.set_page_config(layout="wide")
 
 sale_fields = ['Продажа конечному потребителю в точке продаж',
@@ -79,8 +81,9 @@ def group_region_retails(product_gtin: str, start_date, end_date):
 
 okato = pd.read_csv('data/okato.csv')
 
-product_gtin = st.text_input("GTIN интересующего товара, цены на который будут анализироваться:",
-                             "1248F88441BCFC563FB99D77DB0BB80D")
+# product_gtin = st.text_input("GTIN интересующего товара, цены на который будут анализироваться:",
+#                              "1248F88441BCFC563FB99D77DB0BB80D")
+product_gtin = st.selectbox("GTIN интересующего товара", closings["gtin"].unique())
 value_type = st.selectbox("Тип значений для анализа", ["Минимальная цена", "Максимальная цена", "Средняя цена"])
 start_date = st.date_input("Начало периода, в котором рассматриваются продажи", dt(2021, 11, 22))
 end_date = st.date_input("Конец периода", dt(2022, 11, 22))

@@ -6,6 +6,9 @@ import pandas as pd
 import numpy as np
 import geopandas as gpd
 import folium
+from datetime import datetime as dt
+
+print(dt.now(), "Predicting Demand Visited")
 
 st.set_page_config(layout="wide")
 

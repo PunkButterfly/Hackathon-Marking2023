@@ -6,19 +6,22 @@ import pandas as pd
 import numpy as np
 import geopandas as gpd
 import folium
+from datetime import datetime as dt
+
+print(dt.now(), "Predicting General Visited")
 
 st.set_page_config(layout="wide")
 
 st.header("Прогнозирование спроса и поставок товаров в стране")
 st.markdown(
-    "Также мы разработали систему одновременного предсказания ввода товара в оборот и вывода товара из оборота относительно всей страны (без деления по регионам).  "
+    "Мы разработали систему одновременного предсказания ввода товара в оборот и вывода товара из оборота относительно всей страны (без деления по регионам).  "
     "Для этого так же использовались сети LSTM. "
     "Для каждого gtin строится график с предсказаниями ввода и вывода товара на 60 дней вперед. "
     "Для оценки снова была введена метрика. Пусть  " + "\n" +
-    r"* $\text{last predicted enty cumsum}$ -- последнее предсказанное значение количества введеного товара. "
+    r"* $\text{last predicted enty cumsum}$ -- последнее предсказанное значение количества введеного товара. " + "\n" +
     r"* $\text{last predicted sold cumsum}$ -- последнее предсказанное значение количество выведенного из оборота товара  " + "\n" +
     "Тогда мeтрика считается как:  " + "\n" +
-    r"$$\text{metric}:=\frac{\text{(last predicted enty cumsum} - \text{last predicted sold cumsum}}{\text{last predicted enty cumsum}}$$" + "\n" +
+    r"$$\text{metric}:=\frac{\text{(last predicted enty cumsum} - \text{last predicted sold cumsum}}{\text{last predicted enty cumsum}}$$  " + "\n" +
     "Метрика показывает насколько процентов предсказанный вывод товара из оборота меньше ввода в оборот. "
     "Чем ниже процент, тем больше в стране требуется конкретного товара (отрицательный процент означает, что вывод товара превысит поставки)")
 
@@ -32,23 +35,24 @@ def plot_graph(df):
     test['cnt_cumsum_entry'] += curr_data['cnt_cumsum_entry'][-1:].values
     test['cnt_cumsum_sold'] += curr_data['cnt_cumsum_sold'][-1:].values
 
-    fig1 = px.line(curr_data, x='dt', y='cnt_cumsum_sold')
-    fig2 = px.line(predicted_data, x='dt', y='cnt_cumsum_sold')
-    fig2['data'][0]['line']['color'] = "#ffa500"
-    fig2['data'][0]['line']['dash'] = "dot"
-    fig5 = px.line(test, x='dt', y='cnt_cumsum_sold')
-    fig5['data'][0]['line']['color'] = "#8b00ff"
+    fig = go.Figure()
+    fig.add_trace(go.Scatter(x=curr_data["dt"], y=curr_data["cnt_cumsum_sold"],
+                             name="Текущие продажи", line=dict(color="#00bfff")))
+    fig.add_trace(go.Scatter(x=test["dt"], y=test["cnt_cumsum_sold"],
+                             name="Реальные продажи", line=dict(color="purple")))
+    fig.add_trace(go.Scatter(x=predicted_data["dt"], y=predicted_data["cnt_cumsum_sold"],
+                             name="Предсказанные продажи", line=dict(dash='dot', color="#FFA500")))
 
-    fig3 = px.line(curr_data, x='dt', y='cnt_cumsum_entry')
-    fig3['data'][0]['line']['color'] = "#ff2b2b"
-    fig4 = px.line(predicted_data, x='dt', y='cnt_cumsum_entry')
-    fig4['data'][0]['line']['color'] = "#008000"
-    fig4['data'][0]['line']['dash'] = "dot"
-    fig6 = px.line(test, x='dt', y='cnt_cumsum_entry')
-    fig6['data'][0]['line']['color'] = "#9b2d30"
+    fig.add_trace(go.Scatter(x=predicted_data["dt"], y=predicted_data["cnt_cumsum_entry"],
+                             name="Предсказанное производство", line=dict(dash='dot', color="green")))
+    fig.add_trace(go.Scatter(x=curr_data["dt"], y=curr_data["cnt_cumsum_entry"],
+                             name="Текущее производство", line=dict(color="red")))
+    fig.add_trace(go.Scatter(x=test["dt"], y=test["cnt_cumsum_entry"],
+                             name="Реальное производство", line=dict(color="#9b2d30")))
 
-    fig = go.Figure(data=fig1.data + fig2.data + fig3.data + fig4.data + fig5.data + fig6.data)
-    fig.update_layout(showlegend=True)
+    fig.update_layout(
+        title="График вывода из оборота и ввода в оборот", xaxis_title="Дата", yaxis_title="Кумулятивная сумма"
+    )
     return fig
 
 
@@ -76,7 +80,7 @@ st.subheader("Оценка рисков дефицита определенно�
 sorted_gtins = data.drop_duplicates(subset=["gtin", "metric"]).sort_values(by="metric", ascending=True)["gtin"]
 
 gtin = st.selectbox("Товар:", sorted_gtins, index=0)
-# gtin = st.text_input("Товар:", "8CB88CFCD80739D8171051B5116FA775")
+# gtin = st.text_input("Товар:", "D19FD3A6A052746B6DF2532E96CE045C")
 
 sample = get_data(data, gtin).sort_values('dt')
 

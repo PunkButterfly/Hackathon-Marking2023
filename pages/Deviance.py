@@ -3,6 +3,8 @@ import pandas as pd
 import numpy as np
 from datetime import datetime as dt
 
+print(dt.now(), "Deviance Visited")
+
 st.header("Индекс Хиршмана-Херфиндаля для поиска монополий среди поставщиков")
 st.markdown("Мы использовали индекс Хиршмана-Херфиндаля для поиска монополий среди поставщиков.  \n"
             "Для каждого `TNVED10` суммируется общее количество товаров у каждого `INN`.  \n"
