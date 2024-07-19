@@ -65,6 +65,8 @@ $$\text{metric}:=\frac{\text{(last predicted enty cumsum} - \text{last predicted
 На сайте - страница Predicting General 
 
 ## Развернутый прототип 
+docker pull punkbutterfly/hackathon-marking2023 (kuprik01/marking_prod)
+docker run -p 8501:8501 punkbutterfly/hackathon-marking2023
 
 ## Исходный код
 Исходный код веб-сервиса, обработки данных и построения предиктов моделями находится в [github-репозитории](https://github.com/PunkButterfly/Hackathon-MarkingHack).
